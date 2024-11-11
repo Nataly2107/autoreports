@@ -77,3 +77,17 @@
     #context counter(page).final().at(-1)
     листах
 ]
+
+
+#pagebreak()
+
+Лист согласования от Заказчика:
+
+#table(
+    columns: (1fr,1fr,1fr,1fr,1fr),
+    table.header[*Наименование\ организации,\ предприятия*][*Должность\ исполнителя*][*ФИО*][*Подпись*][*Дата*],
+    [#square(size: 2cm, stroke: none)],[],[],[],[],
+    [#square(size: 2cm, stroke: none)],[],[],[],[],
+    [#square(size: 2cm, stroke: none)],[],[],[],[],
+    [#square(size: 2cm, stroke: none)],[],[],[],[],
+)
