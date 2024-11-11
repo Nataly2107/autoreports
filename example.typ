@@ -92,7 +92,7 @@
 #include "gloss.typ"
 
 #set heading(numbering: "1.")
-
+#set align(left)
 #pagebreak()
 
 = ОБЩИЕ СВЕДЕНИЯ
