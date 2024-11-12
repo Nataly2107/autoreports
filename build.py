@@ -16,19 +16,17 @@ def tests():
         lines = f.readlines()
 
     tests = pandas.read_csv('tests.csv',delimiter=';')
-    # print(tests)
-    # print(tests.__dict__)
-    # print(tests['Задача'])
     N=1
 
     with open("request.typ", "wt") as f:
+        f.write("#pagebreak()\n")
+        f.write("#set page(flipped: true)\n")
+        f.write("*Таблица 1 - Перечень требований*\n")
+        f.write("\n")
         f.write("#table(\n")
-        f.write("  columns: (auto, auto, auto, auto),\n")
-        #f.write("  inset: pt,\n")
-        f.write("  align: horizon,\n")
-        f.write("  table.header( \n")
-        f.write("    [*N*], [*Текст требования*], [*Раздел\\ ЧТЗ*], [*Наименование теста (контрольного сценария)*] \n")
-        f.write("), \n")
+        f.write("    columns: (0.5fr, 3fr, 0.75fr, 6fr),\n")
+        f.write("    table.header([*N*], [*Текст\ требования*], [*Раздел\ ЧТЗ*], [*Наименование теста\ (контрольного сценария)*]), \n")
+        f.write("\n")
         for line in lines:
             a = line.split(";")
             #print("DEBUG>", a)
@@ -58,28 +56,18 @@ def gloss():
         lines = f.readlines()
 
     with open("gloss.typ", "wt") as f:
-        f.write("#set table(\n")
-        f.write("stroke: (x, y) => if y == 0 {\n")
-        f.write("  (bottom: 0.7pt + black)\n")
-        f.write(" },\n")
-        f.write("align: (x, y) => (\n")
-        f.write("  if y == 0 { center }\n")
-        f.write("  else { left }\n")
-        f.write(")\n")
-        f.write(")\n")
+        f.write("= *#upper(\"Глоссарий\")*\n")
         f.write("\n")
-        f.write("#set table.hline(stroke: .6pt)\n")
-        f.write("#upper[*Глоссарий*] //добавить выравнивание по центру\n")
         f.write("#table(")
-        f.write("    columns: (1fr,4fr),\n")
-        f.write("    stroke: 0.5pt + rgb(\"666675\"),\n")
-        f.write("    inset: 10pt,\n")
+        f.write("    columns: (1fr,4fr),")
+        f.write("    //stroke: 0.25pt,")
         f.write("    table.header[*Термин, сокращение*][*Определение*], //выравнить заколовок по центру\n")
+        f.write("\n")
         for line in lines:
             a = line.split(";")
             #print("DEBUG>", a)
             if len(a) > 1:
-                f.write("  [{}], [{}],\n".format(a[0], a[1].strip()))
+                f.write("    [{}], [{}],\n".format(a[0], a[1].strip()))
             else:
                 print("WRONG LINE: " + line)
         f.write(")\n")
