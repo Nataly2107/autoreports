@@ -5,7 +5,7 @@ import pandas
 from pandas import read_excel
 
 def to_typst(text):
-    return text.replace('*', '\*').replace('[', '\[').replace(']', '\]').replace('<', '\<').replace('>', '\>').replace('@', '\@')
+    return text.replace('*', '\*').replace('[', '\[').replace(']', '\]').replace('<', '\<').replace('>', '\>').replace('@', '\@').replace('•','\ •').replace('1.','+ ').replace('2.','+ ').replace('3.','+ ').replace('4.','+ ').replace('5.','+ ')
 
 def load_data():
     lines = []
@@ -115,7 +115,7 @@ def app(records):
         f.write("#show table: set par(leading: 0.6em)\n")
         f.write("\n")
         f.write("#table(\n")
-        f.write("    columns: (0.5fr, 1fr, 1.5fr, 4.5fr, 4fr, 2fr),\n")
+        f.write("    columns: (0.5fr, 0.8fr, 1.75fr, 4.5fr, 4fr, 1.7fr),\n")
         f.write("    table.header([*N*], [*Пункт\ ЧТЗ*], [*Проверка*], [*Шаги проверки*], [*Ожидаемый результат*], [*Система, в которой выполняется проверка*]),\n")
         f.write("\n")
 
@@ -127,7 +127,8 @@ def app(records):
             f.write("table.cell(rowspan: {})[{}],\n".format(1 + len(r['Шаги']), N))
             f.write("table.cell(colspan: 5)[")
             f.write("Проверка: " + r['Наименование'] + " \ \n")
-            f.write("Предварительное условие: \ ")
+            if len(r['Предусловия']) > 0:
+                f.write("Предварительное условие: \ ")
             for cond in r['Предусловия']:
                 f.write("\n + " + to_typst(cond))
             f.write("\n],\n")
