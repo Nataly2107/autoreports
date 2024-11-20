@@ -4,50 +4,83 @@ import os
 import pandas
 from pandas import read_excel
 
-def tests():
-    # df = read_excel('tests.xlsx', index_col=0)
-    # print(df.head()) # shows headers with top 5 rows
+def to_typst(text):
+    return text.replace('*', '\*').replace('[', '\[').replace(']', '\]').replace('<', '\<').replace('>', '\>').replace('@', '\@').replace('•','\ •').replace('1.','+ ').replace('2.','+ ').replace('3.','+ ').replace('4.','+ ').replace('5.','+ ')
 
-    # print("\n\n\n")
-    # print(df)
-
+def load_data():
     lines = []
     with open("tasks.txt", "rt") as f:
         lines = f.readlines()
 
-    tests = pandas.read_csv('tests.csv',delimiter=';')
-    N=1
+    ctz = {}
+    m = {}
+    N = 1
+    for line in lines:
+        a = line.split(";")
+        if len(a) > 1:
+            ctz[a[0].strip()] = N
+            m[N] = a[1].strip()
+            N += 1
 
+    tests = pandas.read_csv('tests.csv', delimiter=';')
+    height, _ = tests.shape
+
+    indexs = [h for h in range(height) if type(tests['Задача'][h]) is str]
+
+    records = []
+    for i in range(len(indexs)-1):
+        z = tests['Задача'][indexs[i]]
+        r = {
+            'Задача': z,
+            'Наименование': [],
+            'Предусловия': [],
+            'Ожидаемый результат': [],
+            'Шаги': [],
+            'ЧТЗ': ctz[z],
+            'Требование': m[ctz[z]]
+        }
+
+        for n in range(indexs[i], indexs[i + 1]):
+            if type(tests['Наименование'][n]) is str:
+                r['Наименование'] = to_typst(tests['Наименование'][n])
+            if type(tests['Предусловия'][n]) is str:
+                r['Предусловия'].append(tests['Предусловия'][n])
+
+            if type(tests['Шаги'][n]) is str:
+                r['Шаги'].append(tests['Шаги'][n])
+                if type(tests['Ожидаемый результат'][n]) is str:
+                    r['Ожидаемый результат'].append(tests['Ожидаемый результат'][n])
+                else:
+                    r['Ожидаемый результат'].append(" ")
+
+        records.append(r)
+
+    records = sorted(records, key=lambda x: x['ЧТЗ'])
+    return records
+
+
+def tests(records):
     with open("request.typ", "wt") as f:
         f.write("#pagebreak()\n")
-        f.write("#set page(flipped: true)\n")
+        f.write("#set page(flipped: true)\n\n")
         f.write("*Таблица 1 - Перечень требований*\n")
         f.write("\n")
         f.write("#table(\n")
         f.write("    columns: (0.5fr, 3fr, 0.75fr, 6fr),\n")
         f.write("    table.header([*N*], [*Текст\ требования*], [*Раздел\ ЧТЗ*], [*Наименование теста\ (контрольного сценария)*]), \n")
         f.write("\n")
-        for line in lines:
-            a = line.split(";")
-            #print("DEBUG>", a)
-            if len(a) > 1:
-                tests_name = []
-                z = a[0]
-                indexs = []
-                for i, v in enumerate(tests['Задача']):
-                    if v == z:
-                        indexs.append(i)
-                # print(indexs)
+        ctz = sorted(list(set(map(lambda x: x['ЧТЗ'], records))))
+        N = 1
+        for c in ctz:
+            d = [x for x in records if x['ЧТЗ'] == c]
+            if len(d) > 0:
+                req = d[0]['Требование']
+                ctz = d[0]['ЧТЗ']
+                tests_name = list(map(lambda x: x['Наименование'], d))
+                f.write("[{}], [{}], [2.2.1.{}], [{}],\n".format(N, req, N, " \\ \n".join(tests_name)))
+                N += 1
 
-                for i in indexs:
-                    tests_name.append(tests['Наименование'][i].replace('*', '\*'))
-
-                f.write("[{}], [{}], [2.2.1.{}], [{}],\n".format(N, a[1].strip(), N, " \\ \n".join(tests_name)))
-            else:
-                print("WRONG LINE: " + line)
-            N += 1
         f.write(")\n")
-
 
 
 def gloss():
@@ -60,7 +93,6 @@ def gloss():
         f.write("\n")
         f.write("#table(")
         f.write("    columns: (1fr,4fr),")
-        f.write("    //stroke: 0.25pt,")
         f.write("    table.header[*Термин, сокращение*][*Определение*], //выравнить заколовок по центру\n")
         f.write("\n")
         for line in lines:
@@ -72,7 +104,49 @@ def gloss():
                 print("WRONG LINE: " + line)
         f.write(")\n")
 
+
+def app(records):
+    with open("app.typ", "wt") as f:
+        f.write("#pagebreak()\n")
+        f.write("#set page(flipped: true)\n")
+        f.write("\n")
+        f.write("*ПРИЛОЖЕНИЕ 1 КОНТРОЛЬНЫЕ СЦЕНАРИИ ДЛЯ ПРОВЕРКИ ПОЛНОТЫ И КАЧЕСТВА РЕАЛИЗАЦИИ ФУНКЦИЙ СИСТЕМ*\n")
+        f.write("\n")
+        f.write("#show table: set par(leading: 0.6em)\n")
+        f.write("\n")
+        f.write("#table(\n")
+        f.write("    columns: (0.5fr, 0.8fr, 1.75fr, 4.5fr, 4fr, 1.7fr),\n")
+        f.write("    table.header([*N*], [*Пункт\ ЧТЗ*], [*Проверка*], [*Шаги проверки*], [*Ожидаемый результат*], [*Система, в которой выполняется проверка*]),\n")
+        f.write("\n")
+
+        records = sorted(records, key=lambda x: x['ЧТЗ'])
+        N = 0
+        for r in records:
+            N += 1
+
+            f.write("table.cell(rowspan: {})[{}],\n".format(1 + len(r['Шаги']), N))
+            f.write("table.cell(colspan: 5)[")
+            f.write("Проверка: " + r['Наименование'] + " \ \n")
+            if len(r['Предусловия']) > 0:
+                f.write("Предварительное условие: \ ")
+            for cond in r['Предусловия']:
+                f.write("\n + " + to_typst(cond))
+            f.write("\n],\n")
+
+            f.write("table.cell(rowspan: {})[2.2.1.{}],\n".format(len(r['Шаги']), r['ЧТЗ']))
+            f.write("table.cell(rowspan: {})[{}],\n".format(len(r['Шаги']), to_typst(r['Требование'])))
+            for i in range(len(r['Шаги'])):
+                f.write("[{}],\n".format(to_typst(r['Шаги'][i])))
+                f.write("[{}],\n".format(to_typst(r['Ожидаемый результат'][i])))
+                f.write("[Курьер Хаб],\n")
+
+        f.write(")\n")
+    pass
+
+records = load_data()
+
 gloss()
-tests()
+tests(records)
+app(records)
 
 os.system("typst compile example.typ example.pdf")
